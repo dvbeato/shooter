@@ -12,6 +12,7 @@ function GamePlay() {
 	var canvas, context;
 	var gameScore = 0.00;
 	var gameMusic = new Audio();
+
 	gameMusic.src = "sounds/gameMusic.mp3";
 	gameMusic.loop = true;
 
@@ -84,7 +85,10 @@ function GamePlay() {
 			var current_bg;
 			for(var index in this.backgrounds) {
 				current_bg = this.backgrounds[index];
-				context.drawImage(current_bg.img, current_bg.x, current_bg.y)
+				context.drawImage(
+					current_bg.img, 
+					current_bg.x, 
+					current_bg.y)
 			}
 		},
 		animate:function() {
@@ -105,6 +109,16 @@ function GamePlay() {
 		}
 	}
 	
+	function Enemy(x, y) {
+		this.x = x;
+		this.y = y;
+		this.img = new Image();
+		this.img.src = "images/mine.png";
+		this.animate = function() {
+			this.x -= 4;
+		}
+	}
+
 	var player = {
 		x:0,
 		y:(HEIGHT/2),
@@ -150,7 +164,10 @@ function GamePlay() {
 			var current_shoot;
 			for(var index in this.shoots) {
 				current_shoot = this.shoots[index];
-				context.drawImage(current_shoot.img, current_shoot.x, current_shoot.y);
+				context.drawImage(
+					current_shoot.img, 
+					current_shoot.x, 
+					current_shoot.y);
 			}
 		},
 		shoot:function() {
@@ -160,10 +177,15 @@ function GamePlay() {
 			
 			gameScore+= 10;
 
-			this.shoots.push(new Shoot( ( player.x+player.width ),  (player.y + ( player.height/2 ) ) ));
+			this.shoots.push(
+				new Shoot( 
+					( player.x+player.width ),  //X Position
+					(player.y + ( player.height/2 )) //Y Position
+				));
 		}
 	}	
 	
+	var enemies = [];
 	var key = [];
 	this.init = function() {
 		
@@ -183,7 +205,7 @@ function GamePlay() {
 		setInterval(animate, 1000/60);
 		setInterval(render, 100);
 		setInterval(keyListener, 1000/100);
-
+		setInterval(generateEnemies, 1000);
 		gameMusic.play();
 	}
 
@@ -202,21 +224,51 @@ function GamePlay() {
 	}
 
 	function keyupHandler(e) {
-		
-		key.splice(key.indexOf(String.fromCharCode(e.keyCode).toLowerCase()),1);
+		//remove key pressed
+		key.splice(
+			key.indexOf(
+					String.fromCharCode(e.keyCode).toLowerCase()
+				),1);
+
 	}
 
 	function animate() {
 		map.animate();
-
+		
 		for(var index in player.shoots) {
 			player.shoots[index].animate();
 		}
+
+		for(var index in enemies) {
+			enemies[index].animate();
+		}
+	}
+	
+	function generateEnemies() {
+		
+		var randY = (Math.floor((Math.random()*(HEIGHT-61))+1)  )
+		
+		enemies.push(
+				new Enemy(WIDTH, randY )
+			);
 	}
 
 	function render() {
 		map.draw();
 		player.draw();
+		
+		for(var index in enemies) {
+			context.fillStyle="#DD3500";
+			context.lineWidth=2;
+			context.strokeRect(enemies[index].x, enemies[index].y-20, 40, 7);
+			context.fillRect(enemies[index].x, enemies[index].y-20, 40, 7);
+
+			context.drawImage(
+				enemies[index].img, 
+				enemies[index].x,
+				enemies[index].y);
+		}
+
 		context.fillStyle = "#FFF";
 		context.font="bold 16px Arial";
 		context.fillText("score: "+gameScore, 20, 30);
