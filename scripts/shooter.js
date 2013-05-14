@@ -107,7 +107,7 @@ function GamePlay() {
 	
 	var player = {
 		x:0,
-		y:0,
+		y:(HEIGHT/2),
 		width:116,
 		height:69,
 		src:"images/player.png",
@@ -143,6 +143,10 @@ function GamePlay() {
 		},
 		draw:function(){
 			context.drawImage(this.img, this.x, this.y);
+			context.fillStyle="#00DD35";
+			context.lineWidth=2;
+			context.strokeRect(this.x+35, this.y-20, 60, 7);
+			context.fillRect(this.x+35, this.y-20, 60, 7);
 			var current_shoot;
 			for(var index in this.shoots) {
 				current_shoot = this.shoots[index];
