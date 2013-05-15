@@ -1,8 +1,3 @@
-function onLoad(){
-	var game = new GamePlay();
-	game.init();
-}
-
 
 function GamePlay() {
 	
@@ -102,21 +97,32 @@ function GamePlay() {
 	function Shoot(x, y) {
 		this.x = x;
 		this.y = y;
+		this.width = 46;
+		this.height = 16;
+		this.active = true;
 		this.img = new Image();
 		this.img.src = "images/laser.png";
 		this.animate = function() {
 			this.x += 8;
+		}
+		this.isActive = function() {
+			return this.active && (this.x < WIDTH);
 		}
 	}
 	
 	function Enemy(x, y) {
 		this.x = x;
 		this.y = y;
+		this.width = 45;
+		this.height = 58;
+		this.live = true;
 		this.img = new Image();
 		this.img.src = "images/mine.png";
 		this.animate = function() {
 			this.x -= 4;
 		}
+		this.isActive = function() {
+			return this.live &&  (this.x+this.width >= 0);		}
 	}
 
 	var player = {
@@ -124,6 +130,7 @@ function GamePlay() {
 		y:(HEIGHT/2),
 		width:116,
 		height:69,
+		health:60,
 		src:"images/player.png",
 		img:null,
 		shoots : [],
@@ -131,52 +138,42 @@ function GamePlay() {
 			this.img = new Image();
 			this.img.src = this.src;
 		},
-		animate:function(key) {
-						
-			if(key == "w") {
-				player.y -= 4;
-			}
-
-			if(key == "s") {
-				player.y += 4;
-			}
-
-			if(key == "d") {
-				player.x += 4;
-			}
-
-			if(key == "a") {
-				player.x -= 4;
-			}
-
-			if(key == "k") {
-				player.shoot();
-
-			}
-
-		},
 		draw:function(){
 			context.drawImage(this.img, this.x, this.y);
-			context.fillStyle="#00DD35";
+			
+			color = "#00DD35";
+
+			if(this.health < 20)
+				color = "#FF3500";
+			context.fillStyle=color;
 			context.lineWidth=2;
 			context.strokeRect(this.x+35, this.y-20, 60, 7);
-			context.fillRect(this.x+35, this.y-20, 60, 7);
+			context.fillRect(this.x+35, this.y-20, this.health, 7);
 			var current_shoot;
 			for(var index in this.shoots) {
 				current_shoot = this.shoots[index];
-				context.drawImage(
-					current_shoot.img, 
-					current_shoot.x, 
-					current_shoot.y);
+				if(current_shoot.active)
+					context.drawImage(
+						current_shoot.img, 
+						current_shoot.x, 
+						current_shoot.y);
+			}
+		},
+		onCollision:function(){
+			this.health-=10;
+			if(this.health <= 0) {
+				animate();
+				render();
+				alert("Your Score: "+gameScore);
+				document.location.reload();
 			}
 		},
 		shoot:function() {
+
 			var audio = new Audio();
 			audio.src = "sounds/laserFire.wav";
 			audio.play();
 			
-			gameScore+= 10;
-
 			this.shoots.push(
 				new Shoot( 
 					( player.x+player.width ),  //X Position
@@ -193,55 +190,117 @@ function GamePlay() {
 		context = canvas.getContext("2d");
 		canvas.width = WIDTH;
 		canvas.height = HEIGHT;
-		
 	
 		map.init();
 		player.init();
 
-		window.addEventListener("keypress", keyHandler);
-		window.addEventListener("keydown", keyHandler);
-		window.addEventListener("keyup", keyupHandler);
+		setInterval(function() {
+			animate();
+			render();
+			controller();
+			collisionHandler();
+		},1000/60);
 
-		setInterval(animate, 1000/60);
-		setInterval(render, 100);
-		setInterval(keyListener, 1000/100);
 		setInterval(generateEnemies, 1000);
+
 		gameMusic.play();
 	}
+	
+	function collisionHandler() {
+		
+		var each_shoot;
+		for(var index in player.shoots) {
+			
+			each_shoot = player.shoots[index];
+			
+			if(each_shoot.active){	
+			
+				var each_enemy;
+				for(var index in enemies) {
+						
+					each_enemy = enemies[index];
+					if(each_enemy.live) {
+						if(collides(each_shoot, each_enemy)) {
+							each_shoot.active = false;
+							each_enemy.live = false;
+							gameScore+=50;
 
-	function keyListener() {
-		for(var index in key) {
-			player.animate(key[index]);
+							var sound = new Audio();
+							sound.src = "sounds/explosion.wav"
+							sound.play();
+						}
+
+					}
+				}
+			}
 		}
+		
+
+		var each_enemy;
+		for(var index in enemies) {
+			each_enemy = enemies[index];
+			if(each_enemy.live) {
+				if(collides(player, each_enemy)) {
+										
+					each_enemy.live = false;
+						var sound = new Audio();
+							sound.src = "sounds/explosion.wav"
+							sound.play();
+					player.onCollision();
+				}
+			}
+		}
+
+	}
+	
+	function collides(a, b) {
+		return a.x < b.x + b.width &&
+			   a.x + a.width > b.x &&
+			   a.y < b.y + b.height &&
+			   a.y + a.height > b.y;
 	}
 
-	function keyHandler(e) {
-		key.push(String.fromCharCode(e.charCode));
+	function controller() {
+						
+			if(keydown.w) {
+				player.y -= 4;
+			}
 
-		if ( key.length >= 3) {
-			key = key.slice(1);
-		}
-	}
+			if(keydown.s) {
+				player.y += 4;
+			}
 
-	function keyupHandler(e) {
-		//remove key pressed
-		key.splice(
-			key.indexOf(
-					String.fromCharCode(e.keyCode).toLowerCase()
-				),1);
+			if(keydown.d) {
+				player.x += 4;
+			}
 
+			if(keydown.a) {
+				player.x -= 4;
+			}
+
+			if(keydown.k) {
+				player.shoot();
+			}
 	}
 
 	function animate() {
 		map.animate();
-		
+			
 		for(var index in player.shoots) {
 			player.shoots[index].animate();
 		}
+		
+		player.shoots = player.shoots.filter(function(shoot){
+			return shoot.isActive();
+		});
 
 		for(var index in enemies) {
 			enemies[index].animate();
 		}
+
+		enemies = enemies.filter(function(enemy){
+			return enemy.isActive();		
+		});
 	}
 	
 	function generateEnemies() {
@@ -258,21 +317,41 @@ function GamePlay() {
 		player.draw();
 		
 		for(var index in enemies) {
-			context.fillStyle="#DD3500";
-			context.lineWidth=2;
-			context.strokeRect(enemies[index].x, enemies[index].y-20, 40, 7);
-			context.fillRect(enemies[index].x, enemies[index].y-20, 40, 7);
+			
+			if(enemies[index].live) {
 
-			context.drawImage(
-				enemies[index].img, 
-				enemies[index].x,
-				enemies[index].y);
+				context.fillStyle="#DD3500";
+				context.lineWidth=2;
+				context.strokeRect(enemies[index].x, enemies[index].y-20, 40, 7);
+				context.fillRect(enemies[index].x, enemies[index].y-20, 40, 7);
+
+				context.drawImage(
+					enemies[index].img, 
+					enemies[index].x,
+					enemies[index].y);
+			}
 		}
-
+		
 		context.fillStyle = "#FFF";
 		context.font="bold 16px Arial";
 		context.fillText("score: "+gameScore, 20, 30);
 	}
 }
-
+//bind keys
+$(function() {
+  window.keydown = {};
+  
+  function keyName(event) {
+    return jQuery.hotkeys.specialKeys[event.which] ||
+      String.fromCharCode(event.which).toLowerCase();
+  }
+  
+  $(document).bind("keydown", function(event) {
+    keydown[keyName(event)] = true;
+  });
+  
+  $(document).bind("keyup", function(event) {
+    keydown[keyName(event)] = false;
+  });
+});
 

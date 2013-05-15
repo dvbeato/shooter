@@ -2,14 +2,20 @@
 <html>
 <head>
 	<title>Shooter</title>
+	<script type="text/javascript" src="scripts/jquery.js"></script>
+	<script type="text/javascript" src="scripts/hotkeys.js"></script>
 	<script type="text/javascript" src="scripts/shooter.js"></script>
-
 </head>
-<body onload="onLoad();">
+<body>
 
 <canvas id="canvas"></canvas>
 <br />
 use WSAD to move and K to shoot
+
+<script>
+	var game = new GamePlay();
+	game.init();
+</script>
 
 </body>
 </html>
