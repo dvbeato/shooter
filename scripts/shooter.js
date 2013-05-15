@@ -14,6 +14,15 @@ function GamePlay() {
 	
 	var shootAudio = new Audio();
 	shootAudio.src = "sounds/laserBlaster.mp3";
+	
+	var explosionAudio = new Audio();
+	explosionAudio.src = "sounds/explosion.wav"
+	
+	var enemyImg = new Image();
+	enemyImg.src = "images/mine.png";
+	
+	
+	
 			
 
 	var map = {
@@ -121,8 +130,7 @@ function GamePlay() {
 		this.width = 45;
 		this.height = 58;
 		this.live = true;
-		this.img = new Image();
-		this.img.src = "images/mine.png";
+		this.img = enemyImg;
 		this.animate = function() {
 			this.x -= 4;
 		}
@@ -228,9 +236,8 @@ function GamePlay() {
 							each_enemy.live = false;
 							gameScore+=50;
 
-							var sound = new Audio();
-							sound.src = "sounds/explosion.wav"
-							sound.play();
+							explosionAudio.currentTime = 0;	
+							explosionAudio.play();
 						}
 
 					}
@@ -246,9 +253,8 @@ function GamePlay() {
 				if(collides(player, each_enemy)) {
 										
 					each_enemy.live = false;
-						var sound = new Audio();
-							sound.src = "sounds/explosion.wav"
-							sound.play();
+					explosionAudio.currentTime = 0;	
+					explosionAudio.play();
 					player.onCollision();
 				}
 			}
