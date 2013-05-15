@@ -256,19 +256,19 @@ function GamePlay() {
 
 	function controller() {
 						
-			if(keydown.w) {
+			if(keydown.w && player.y>=32) {
 				player.y -= 4;
 			}
 
-			if(keydown.s) {
+			if(keydown.s && player.y<=(HEIGHT-player.height)) {
 				player.y += 4;
 			}
 
-			if(keydown.d) {
+			if(keydown.d && player.x<=(WIDTH-player.width)) {
 				player.x += 4;
 			}
 
-			if(keydown.a) {
+			if(keydown.a && player.x>=0) {
 				player.x -= 4;
 			}
 
