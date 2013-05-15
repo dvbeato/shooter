@@ -280,11 +280,9 @@ function GamePlay() {
 			}
 
 			if(keydown.k && !player.shootIntervalId) {
-				console.log("if",keydown.k,player.shootIntervalId);
 				player.shoot();
 				player.shootIntervalId = self.setInterval(function(){ player.shoot();},300);
-			}else if(!keydown.k && player.shootIntervalId){
-				console.log("else",keydown.k,player.shootIntervalId);
+			}else if(!keydown.k && player.shootIntervalId){				
 				window.clearInterval(player.shootIntervalId);
 				player.shootIntervalId = null;
 			}
