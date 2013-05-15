@@ -133,6 +133,7 @@ function GamePlay() {
 		health:60,
 		src:"images/player.png",
 		img:null,
+		shootIntervalId:null,
 		shoots : [],
 		init:function(){
 			this.img = new Image();
@@ -278,8 +279,14 @@ function GamePlay() {
 				player.x -= 4;
 			}
 
-			if(keydown.k) {
+			if(keydown.k && !player.shootIntervalId) {
+				console.log("if",keydown.k,player.shootIntervalId);
 				player.shoot();
+				player.shootIntervalId = self.setInterval(function(){ player.shoot();},300);
+			}else if(!keydown.k && player.shootIntervalId){
+				console.log("else",keydown.k,player.shootIntervalId);
+				window.clearInterval(player.shootIntervalId);
+				player.shootIntervalId = null;
 			}
 	}
 
