@@ -267,18 +267,32 @@ function GamePlay() {
 						
 			if(keydown.w) {
 				player.y -= 4;
+				if (player.y < 0) {
+					player.y = 0;
+				}
+
 			}
 
 			if(keydown.s) {
 				player.y += 4;
+				if (player.y > HEIGHT-player.height) {
+					player.y = HEIGHT-player.height;
+				}
+
 			}
 
 			if(keydown.d) {
 				player.x += 4;
+				if(player.x > WIDTH-player.width) {
+					player.x = WIDTH-player.width;
+				}
 			}
 
 			if(keydown.a) {
 				player.x -= 4;
+				if (player.x < 0) {
+					player.x = 0;
+				}
 			}
 
 			if(keydown.k && !player.shootIntervalId) {
