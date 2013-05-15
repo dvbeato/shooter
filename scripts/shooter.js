@@ -6,37 +6,45 @@ function GamePlay() {
 
 	var canvas, context;
 	var gameScore = 0.00;
+	
 	var gameMusic = new Audio();
-
 	gameMusic.src = "sounds/gameMusic.mp3";
 	gameMusic.loop = true;
-	
 	
 	var shootAudio = new Audio();
 	shootAudio.src = "sounds/laserBlaster.mp3";
 	
 	var explosionAudio = new Audio();
-	explosionAudio.src = "sounds/explosion.wav"
+	explosionAudio.src = "sounds/explosion.wav";
+	
+	var mainBackground = new Image();
+	mainBackground.src ="images/mainbackground.png";
+
+	var bgLayer1 = new Image();
+	bgLayer1.src = "images/bgLayer1.png";
+	
+	var bgLayer2 = new Image();
+	bgLayer2.src = "images/bgLayer2.png";
+	
+	var playerImg = new Image();
+	playerImg.src = "images/player.png";
 	
 	var enemyImg = new Image();
-	enemyImg.src = "images/mine.png";
+	enemyImg.src ="images/mine.png";
 	
+	var shootImg = new Image();
+	shootImg.src = "images/laser.png";
 	
-	
-			
-
 	var map = {
 		backgrounds:[
 			{
-				src:"images/mainbackground.png", 
 				x:0,
 				y:0,
-				img:null
+				img:mainBackground
 			},{
-				src:"images/bgLayer1.png",
 				x:0,
 				y:0,
-				img:null,
+				img:bgLayer1,
 				animate:function() {
 					this.x -= 1;
 
@@ -45,10 +53,9 @@ function GamePlay() {
 					}
 				}
 			}, {
-				src:"images/bgLayer1.png",
 				x:WIDTH,
 				y:0,
-				img:null,
+				img:bgLayer1,
 				animate:function() {
 					this.x -= 1;
 
@@ -57,10 +64,9 @@ function GamePlay() {
 					}
 				}
 			},{
-				src:"images/bgLayer2.png",
 				x:0,
 				y:0,
-				img:null,
+				img:bgLayer2,
 				animate:function() {
 					this.x -= 4;
 
@@ -69,10 +75,9 @@ function GamePlay() {
 					}
 				}
 			},{
-				src:"images/bgLayer2.png",
 				x:WIDTH,
 				y:0,
-				img:null,
+				img:bgLayer2,
 				animate:function() {
 					this.x -= 4;
 
@@ -83,13 +88,6 @@ function GamePlay() {
 			}
 
 		],
-		init: function() {
-			for (var index in this.backgrounds) {
-				var img = new Image();
-				img.src = this.backgrounds[index].src;
-				this.backgrounds[index].img = img;
-			}		
-		},
 		draw: function() {
 			var current_bg;
 			for(var index in this.backgrounds) {
@@ -97,7 +95,7 @@ function GamePlay() {
 				context.drawImage(
 					current_bg.img, 
 					current_bg.x, 
-					current_bg.y)
+					current_bg.y);
 			}
 		},
 		animate:function() {
@@ -106,7 +104,7 @@ function GamePlay() {
 				this.backgrounds[i].animate();
 			}
 		}
-	}
+	};
 	
 	function Shoot(x, y) {
 		this.x = x;
@@ -114,8 +112,8 @@ function GamePlay() {
 		this.width = 46;
 		this.height = 16;
 		this.active = true;
-		this.img = new Image();
-		this.img.src = "images/laser.png";
+		this.img = shootImg;
+		
 		this.animate = function() {
 			this.x += 8;
 		}
@@ -135,7 +133,8 @@ function GamePlay() {
 			this.x -= 4;
 		}
 		this.isActive = function() {
-			return this.live &&  (this.x+this.width >= 0);		}
+			return this.live &&  (this.x+this.width >= 0);		
+		}
 	}
 
 	var player = {
@@ -144,14 +143,9 @@ function GamePlay() {
 		width:116,
 		height:69,
 		health:60,
-		src:"images/player.png",
-		img:null,
+		img:playerImg,
 		shootIntervalId:null,
 		shoots : [],
-		init:function(){
-			this.img = new Image();
-			this.img.src = this.src;
-		},
 		draw:function(){
 			context.drawImage(this.img, this.x, this.y);
 			
@@ -187,11 +181,11 @@ function GamePlay() {
 			shootAudio.play();
 			this.shoots.push(
 				new Shoot( 
-					( player.x+player.width ),  //X Position
+					( player.x + player.width ),  //X Position
 					(player.y + ( player.height/2 )) //Y Position
 				));
 		}
-	}	
+	};
 	
 	var enemies = [];
 	var key = [];
@@ -201,65 +195,56 @@ function GamePlay() {
 		context = canvas.getContext("2d");
 		canvas.width = WIDTH;
 		canvas.height = HEIGHT;
-	
-		map.init();
-		player.init();
 
 		setInterval(function() {
 			animate();
 			render();
 			controller();
-			collisionHandler();
+			
 		},1000/60);
-
+		
+		setInterval(collisionHandler, 10);
+		
 		setInterval(generateEnemies, 1000);
 
 		gameMusic.play();
-	}
+	};
 	
 	function collisionHandler() {
 		
-		var each_shoot;
-		for(var index in player.shoots) {
+		var each_enemy;
+		
+		for(var index in enemies) {
 			
-			each_shoot = player.shoots[index];
+			each_enemy = enemies[index];
 			
-			if(each_shoot.active){	
+			if(each_enemy.live) {
 			
-				var each_enemy;
-				for(var index in enemies) {
+				if(collides(player, each_enemy)) {
+					each_enemy.live = false;
+					explosionAudio.play();
+					player.onCollision();
+				}
+				
+				var each_shoot;
+			
+				for(var index in player.shoots) {
+				
+					each_shoot = player.shoots[index];
+					
+					if(collides(each_shoot, each_enemy)) {
+						each_shoot.active = false;
+						each_enemy.live = false;
 						
-					each_enemy = enemies[index];
-					if(each_enemy.live) {
-						if(collides(each_shoot, each_enemy)) {
-							each_shoot.active = false;
-							each_enemy.live = false;
-							gameScore+=50;
+						context.fillText("+50", each_enemy.x, each_enemy.y);
+						
+						gameScore+=50;
 
-							explosionAudio.currentTime = 0;	
-							explosionAudio.play();
-						}
-
+						explosionAudio.play();
 					}
 				}
 			}
 		}
-		
-
-		var each_enemy;
-		for(var index in enemies) {
-			each_enemy = enemies[index];
-			if(each_enemy.live) {
-				if(collides(player, each_enemy)) {
-										
-					each_enemy.live = false;
-					explosionAudio.currentTime = 0;	
-					explosionAudio.play();
-					player.onCollision();
-				}
-			}
-		}
-
 	}
 	
 	function collides(a, b) {
@@ -318,7 +303,7 @@ function GamePlay() {
 	
 	function generateEnemies() {
 		
-		var randY = (Math.floor((Math.random()*(HEIGHT-61))+1)  )
+		var randY = (Math.floor((Math.random()*(HEIGHT-61))+1) );
 		
 		enemies.push(
 				new Enemy(WIDTH, randY )
