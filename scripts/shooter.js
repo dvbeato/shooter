@@ -10,6 +10,11 @@ function GamePlay() {
 
 	gameMusic.src = "sounds/gameMusic.mp3";
 	gameMusic.loop = true;
+	
+	
+	var shootAudio = new Audio();
+	shootAudio.src = "sounds/laserBlaster.mp3";
+			
 
 	var map = {
 		backgrounds:[
@@ -133,6 +138,7 @@ function GamePlay() {
 		health:60,
 		src:"images/player.png",
 		img:null,
+		shootIntervalId:null,
 		shoots : [],
 		init:function(){
 			this.img = new Image();
@@ -168,12 +174,9 @@ function GamePlay() {
 				document.location.reload();
 			}
 		},
-		shoot:function() {
-
-			var audio = new Audio();
-			audio.src = "sounds/laserFire.wav";
-			audio.play();
-			
+		shoot:function() {	
+			shootAudio.currentTime = 0;		
+			shootAudio.play();
 			this.shoots.push(
 				new Shoot( 
 					( player.x+player.width ),  //X Position
@@ -278,8 +281,12 @@ function GamePlay() {
 				player.x -= 4;
 			}
 
-			if(keydown.k) {
+			if(keydown.k && !player.shootIntervalId) {
 				player.shoot();
+				player.shootIntervalId = self.setInterval(function(){ player.shoot();},300);
+			}else if(!keydown.k && player.shootIntervalId){				
+				window.clearInterval(player.shootIntervalId);
+				player.shootIntervalId = null;
 			}
 	}
 
