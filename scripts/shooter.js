@@ -1,8 +1,8 @@
 
 function GamePlay() {
 	
-	var WIDTH = 800;
-	var HEIGHT = 480;
+	var WIDTH  = 800;
+	var HEIGHT = 600;
     var LOG = true;
 	var canvas, context;
 	var gameScore = 0.00;
@@ -97,7 +97,7 @@ function GamePlay() {
 				context.drawImage(
 					current_bg.img, 
 					current_bg.x, 
-					current_bg.y);
+					current_bg.y, WIDTH, HEIGHT);
                 
 			}
 		},
@@ -114,7 +114,7 @@ function GamePlay() {
 		this.y = y;
 		this.width = 46;
 		this.height = 16;
-        this.speed += 8;
+        this.speed = 8;
 		this.active = true;
 		this.img = shootImg;
 		
@@ -224,7 +224,7 @@ function GamePlay() {
 			
 		},1000/60);
 		
-        setInterval(function(){ gameMaxSpeed++;gameMinSpeed++; }, 30*1000);
+        setInterval(function(){ gameMaxSpeed++;gameMinSpeed++; }, 30000);
         
 		setInterval(collisionHandler, 10);
 		
@@ -361,7 +361,7 @@ function GamePlay() {
         draw:function(){
             
             context.globalAlpha = 0.3;
-            
+            context.fillStyle = "#FFF";
             context.fillStyle = "#000";
             
             context.fillRect(this.x,this.y, 100, (30*this.info.length));
@@ -372,7 +372,7 @@ function GamePlay() {
             context.globalAlpha = 1.0;
         }
         
-    }
+    };
 }
 //bind keys
 $(function() {
