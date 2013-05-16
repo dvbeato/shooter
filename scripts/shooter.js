@@ -3,10 +3,12 @@ function GamePlay() {
 	
 	var WIDTH = 800;
 	var HEIGHT = 480;
-
+    var LOG = true;
 	var canvas, context;
 	var gameScore = 0.00;
-	
+	var gameMinSpeed = 1;
+    var gameMaxSpeed = 3;
+    
 	var gameMusic = new Audio();
 	gameMusic.src = "sounds/gameMusic.mp3";
 	gameMusic.loop = true;
@@ -96,6 +98,7 @@ function GamePlay() {
 					current_bg.img, 
 					current_bg.x, 
 					current_bg.y);
+                
 			}
 		},
 		animate:function() {
@@ -111,60 +114,77 @@ function GamePlay() {
 		this.y = y;
 		this.width = 46;
 		this.height = 16;
+        this.speed += 8;
 		this.active = true;
 		this.img = shootImg;
 		
 		this.animate = function() {
-			this.x += 8;
-		}
+			this.x += this.speed;
+		};
+        
+        this.draw = function() {
+            if(this.active) {
+                context.drawImage(this.img, this.x, this.y, this.width, this.height);
+            }
+        };
+        
 		this.isActive = function() {
 			return this.active && (this.x < WIDTH);
-		}
+		};
 	}
 	
-	function Enemy(x, y) {
+	function Enemy(x, y, speed) {
 		this.x = x;
 		this.y = y;
-		this.width = 45;
-		this.height = 58;
+        this.speed = speed;
+		this.width = 45/2;
+		this.height = 58/2;
 		this.live = true;
 		this.img = enemyImg;
+        this.draw = function() {
+            if(this.live) {
+                context.fillStyle="#DD3500";
+                context.lineWidth=2;
+                context.strokeRect(this.x, this.y-20, 40, 7);
+                context.fillRect(this.x, this.y-20, 40, 7);
+
+                context.drawImage(this.img, this.x,this.y, this.width, this.height);
+            }
+        };
+        
 		this.animate = function() {
-			this.x -= 4;
-		}
+			this.x -= this.speed;
+		};
+        
 		this.isActive = function() {
 			return this.live &&  (this.x+this.width >= 0);		
-		}
+		};
 	}
 
 	var player = {
 		x:0,
 		y:(HEIGHT/2),
-		width:116,
-		height:69,
+		width:116/2,
+		height:69/2,
 		health:60,
 		img:playerImg,
 		shootIntervalId:null,
 		shoots : [],
 		draw:function(){
-			context.drawImage(this.img, this.x, this.y);
+			context.drawImage(this.img, this.x, this.y, this.width, this.height);
 			
 			color = "#00DD35";
 
 			if(this.health < 20)
 				color = "#FF3500";
+            
 			context.fillStyle=color;
 			context.lineWidth=2;
 			context.strokeRect(this.x+35, this.y-20, 60, 7);
 			context.fillRect(this.x+35, this.y-20, this.health, 7);
-			var current_shoot;
-			for(var index in this.shoots) {
-				current_shoot = this.shoots[index];
-				if(current_shoot.active)
-					context.drawImage(
-						current_shoot.img, 
-						current_shoot.x, 
-						current_shoot.y);
+			
+            for(var index in this.shoots) {
+				this.shoots[index].draw();
 			}
 		},
 		onCollision:function(){
@@ -195,14 +215,17 @@ function GamePlay() {
 		context = canvas.getContext("2d");
 		canvas.width = WIDTH;
 		canvas.height = HEIGHT;
-
+        
 		setInterval(function() {
+            
 			animate();
 			render();
 			controller();
 			
 		},1000/60);
 		
+        setInterval(function(){ gameMaxSpeed++;gameMinSpeed++; }, 30*1000);
+        
 		setInterval(collisionHandler, 10);
 		
 		setInterval(generateEnemies, 1000);
@@ -222,6 +245,7 @@ function GamePlay() {
 			
 				if(collides(player, each_enemy)) {
 					each_enemy.live = false;
+                    explosionAudio.currentTime = 0;
 					explosionAudio.play();
 					player.onCollision();
 				}
@@ -303,10 +327,10 @@ function GamePlay() {
 	
 	function generateEnemies() {
 		
-		var randY = (Math.floor((Math.random()*(HEIGHT-61))+1) );
-		
+		var randY = (Math.round((Math.random()*(HEIGHT-61))));
+		var speed = (Math.round((Math.random()+gameMinSpeed)*(gameMaxSpeed)));
 		enemies.push(
-				new Enemy(WIDTH, randY )
+				new Enemy(WIDTH, randY, speed)
 			);
 	}
 
@@ -314,26 +338,41 @@ function GamePlay() {
 		map.draw();
 		player.draw();
 		
+        if(LOG) {
+            log.draw();
+        }
+        
 		for(var index in enemies) {
-			
-			if(enemies[index].live) {
-
-				context.fillStyle="#DD3500";
-				context.lineWidth=2;
-				context.strokeRect(enemies[index].x, enemies[index].y-20, 40, 7);
-				context.fillRect(enemies[index].x, enemies[index].y-20, 40, 7);
-
-				context.drawImage(
-					enemies[index].img, 
-					enemies[index].x,
-					enemies[index].y);
-			}
+			enemies[index].draw();
 		}
 		
 		context.fillStyle = "#FFF";
 		context.font="bold 16px Arial";
 		context.fillText("score: "+gameScore, 20, 30);
 	}
+
+    var log = {
+        x:20,
+        y:20,
+        info:{
+            enemies:enemies.length,
+            shoots: player.shoots.length,
+        },
+        draw:function(){
+            
+            context.globalAlpha = 0.3;
+            
+            context.fillStyle = "#000";
+            
+            context.fillRect(this.x,this.y, 100, (30*this.info.length));
+            
+            context.font="12px Arial";
+		    context.fillText("enemies: "+this.info.enemies, this.x, this.y+(10*1));
+            context.fillText("shoots: "+this.info.enemies, this.x, this.y+(10*2));
+            context.globalAlpha = 1.0;
+        }
+        
+    }
 }
 //bind keys
 $(function() {
